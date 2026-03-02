@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote PC Control Center</title>
     <style>
-        /* (Keep all the CSS styles exactly as they were in the previous message) */
         * {
             margin: 0;
             padding: 0;
@@ -202,10 +201,6 @@
             border-radius: 50%;
             background: var(--secondary);
             display: inline-block;
-        }
-
-        .agent-status.offline {
-            background: var(--gray);
         }
 
         .agent-info {
@@ -656,10 +651,13 @@
                         <div id="terminalTab" class="tab-pane active">
                             <div class="terminal-container">
                                 <div class="terminal-header">
-                                    <span class="terminal-title">Terminal - <span id="terminalPath">~</span></span>
+                                    <span class="terminal-title">Terminal</span>
                                     <span class="terminal-clear" onclick="clearTerminal()">Clear</span>
                                 </div>
-                                <div id="terminalOutput" class="terminal-output">Welcome to Remote PC Control\nType a command and press Enter to execute on the remote PC\n</div>
+                                <div id="terminalOutput" class="terminal-output">Welcome to Remote PC Control
+Type a command and press Enter to execute on the remote PC
+
+</div>
                                 <div class="terminal-input-area">
                                     <span class="terminal-prompt">$</span>
                                     <input type="text" id="terminalInput" class="terminal-input" placeholder="Enter command..." onkeypress="handleTerminalKeypress(event)">
@@ -728,8 +726,8 @@
     </div>
 
     <script>
-        // Configuration - IMPORTANT: Update this to your actual backend URL
-        const API_URL = 'https://remote-pc-backend.onrender.com'; // This is correct based on your agent output
+        // Configuration - Update this to your backend URL
+        const API_URL = 'https://remote-pc-backend.onrender.com'; // Your Render backend URL
         
         let token = localStorage.getItem('token');
         let ws = null;
@@ -786,7 +784,7 @@
                 showNotification('Login successful!', 'success');
             } catch (error) {
                 console.error('Login error:', error);
-                document.getElementById('loginError').textContent = 'Invalid username or password. Check Render environment variables.';
+                document.getElementById('loginError').textContent = 'Invalid username or password';
             } finally {
                 loginBtn.textContent = originalText;
                 loginBtn.disabled = false;
@@ -795,7 +793,6 @@
 
         // WebSocket connection
         function connectWebSocket() {
-            const wsProtocol = API_URL.startsWith('https') ? 'wss' : 'ws';
             const wsUrl = API_URL.replace('http', 'ws') + `/ws/client/${clientId}`;
             
             console.log('Connecting WebSocket to:', wsUrl);
@@ -819,7 +816,7 @@
 
             ws.onclose = () => {
                 console.log('WebSocket disconnected');
-                if (token) {
+                if (token && document.getElementById('dashboard').style.display !== 'none') {
                     // Try to reconnect with exponential backoff
                     const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
                     reconnectAttempts++;
@@ -872,12 +869,6 @@
                 case 'system_info':
                     updateSystemInfo(response.data || response);
                     break;
-                case 'disk_usage':
-                case 'network_stats':
-                    // Handle other info types
-                    break;
-                default:
-                    console.log('Unknown response type:', response.type);
             }
         }
 
@@ -995,7 +986,7 @@
                 const command = input.value.trim();
                 
                 if (command) {
-                    appendToTerminal(`$ ${command}\n`);
+                    appendToTerminal(`$ ${command}`);
                     sendCommand('execute_command', { command });
                     input.value = '';
                 }
@@ -1010,6 +1001,7 @@
 
         function clearTerminal() {
             document.getElementById('terminalOutput').textContent = '';
+            appendToTerminal('Terminal cleared\n');
         }
 
         // Screen sharing
@@ -1228,9 +1220,6 @@
                 loadAgents();
             }
         }, 30000);
-
-        // Add console logging to help debug
-        console.log('Frontend initialized with API_URL:', API_URL);
     </script>
 </body>
 </html>
