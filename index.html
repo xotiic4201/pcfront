@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remote PC Control Center</title>
     <style>
+        /* (Keep all the CSS styles exactly as they were in the previous message) */
         * {
             margin: 0;
             padding: 0;
@@ -658,7 +659,7 @@
                                     <span class="terminal-title">Terminal - <span id="terminalPath">~</span></span>
                                     <span class="terminal-clear" onclick="clearTerminal()">Clear</span>
                                 </div>
-                                <div id="terminalOutput" class="terminal-output"></div>
+                                <div id="terminalOutput" class="terminal-output">Welcome to Remote PC Control\nType a command and press Enter to execute on the remote PC\n</div>
                                 <div class="terminal-input-area">
                                     <span class="terminal-prompt">$</span>
                                     <input type="text" id="terminalInput" class="terminal-input" placeholder="Enter command..." onkeypress="handleTerminalKeypress(event)">
@@ -727,8 +728,9 @@
     </div>
 
     <script>
-        // Configuration
-        const API_URL = 'https://remote-pc-backend.onrender.com'; // Replace with your backend URL
+        // Configuration - IMPORTANT: Update this to your actual backend URL
+        const API_URL = 'https://remote-pc-backend.onrender.com'; // This is correct based on your agent output
+        
         let token = localStorage.getItem('token');
         let ws = null;
         let clientId = 'web-' + Math.random().toString(36).substr(2, 9);
@@ -736,9 +738,11 @@
         let currentTab = 'terminal';
         let screenActive = false;
         let notificationTimeout = null;
+        let reconnectAttempts = 0;
 
-        // Initialize
+        // Check if we have a token and try to auto-login
         if (token) {
+            console.log('Found existing token, attempting auto-login...');
             showDashboard();
             connectWebSocket();
             loadAgents();
@@ -752,7 +756,14 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
+            // Show loading state
+            const loginBtn = document.querySelector('.login-btn');
+            const originalText = loginBtn.textContent;
+            loginBtn.textContent = 'Logging in...';
+            loginBtn.disabled = true;
+            
             try {
+                console.log('Attempting login to:', API_URL + '/api/login');
                 const response = await fetch(`${API_URL}/api/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -760,7 +771,9 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Invalid credentials');
+                    const errorText = await response.text();
+                    console.error('Login failed:', response.status, errorText);
+                    throw new Error(`Login failed: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -769,25 +782,35 @@
                 
                 showDashboard();
                 connectWebSocket();
-                loadAgents();
+                await loadAgents();
                 showNotification('Login successful!', 'success');
             } catch (error) {
-                document.getElementById('loginError').textContent = 'Invalid username or password';
+                console.error('Login error:', error);
+                document.getElementById('loginError').textContent = 'Invalid username or password. Check Render environment variables.';
+            } finally {
+                loginBtn.textContent = originalText;
+                loginBtn.disabled = false;
             }
         });
 
         // WebSocket connection
         function connectWebSocket() {
+            const wsProtocol = API_URL.startsWith('https') ? 'wss' : 'ws';
             const wsUrl = API_URL.replace('http', 'ws') + `/ws/client/${clientId}`;
+            
+            console.log('Connecting WebSocket to:', wsUrl);
             ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
-                console.log('WebSocket connected');
+                console.log('✅ WebSocket connected');
+                reconnectAttempts = 0;
+                showNotification('Connected to server', 'success');
             };
 
             ws.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
+                    console.log('Received:', data.type);
                     handleWebSocketMessage(data);
                 } catch (error) {
                     console.error('Error parsing message:', error);
@@ -796,7 +819,12 @@
 
             ws.onclose = () => {
                 console.log('WebSocket disconnected');
-                setTimeout(connectWebSocket, 5000);
+                if (token) {
+                    // Try to reconnect with exponential backoff
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+                    reconnectAttempts++;
+                    setTimeout(connectWebSocket, delay);
+                }
             };
 
             ws.onerror = (error) => {
@@ -816,6 +844,8 @@
                 case 'error':
                     showNotification(data.message, 'error');
                     break;
+                default:
+                    console.log('Unknown message type:', data.type);
             }
         }
 
@@ -825,33 +855,43 @@
 
             switch (response.type) {
                 case 'command_output':
-                    appendToTerminal(`$ ${response.command}\n${response.output || ''}${response.error ? '\nError: ' + response.error : ''}\n`);
+                    let output = '';
+                    if (response.output) output += response.output;
+                    if (response.error) output += '\n❌ Error: ' + response.error;
+                    if (response.return_code !== undefined) output += `\n➡️ Exit code: ${response.return_code}`;
+                    appendToTerminal(output);
                     break;
                 case 'screen_frame':
-                    updateScreen(response.image);
+                    if (response.image) {
+                        updateScreen(response.image);
+                    }
                     break;
                 case 'process_list':
                     updateProcesses(response.processes);
                     break;
                 case 'system_info':
-                    updateSystemInfo(response.data);
+                    updateSystemInfo(response.data || response);
                     break;
                 case 'disk_usage':
                 case 'network_stats':
-                    // Update info tab
+                    // Handle other info types
                     break;
+                default:
+                    console.log('Unknown response type:', response.type);
             }
         }
 
         // Load agents
         async function loadAgents() {
             try {
+                console.log('Loading agents...');
                 const response = await fetch(`${API_URL}/api/agents`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (!response.ok) {
                     if (response.status === 401) {
+                        console.log('Token expired, logging out');
                         logout();
                         return;
                     }
@@ -859,8 +899,10 @@
                 }
 
                 const agents = await response.json();
+                console.log('Agents loaded:', agents);
                 updateAgentsList(agents);
             } catch (error) {
+                console.error('Error loading agents:', error);
                 showNotification('Error loading agents: ' + error.message, 'error');
             }
         }
@@ -873,7 +915,7 @@
             agentCount.textContent = `${agents.length} PC${agents.length !== 1 ? 's' : ''} connected`;
 
             if (agents.length === 0) {
-                agentsList.innerHTML = '<div class="loading">No PCs connected</div>';
+                agentsList.innerHTML = '<div class="loading">No PCs connected. Make sure your agent is running.</div>';
                 return;
             }
 
@@ -883,11 +925,12 @@
                         <span class="agent-status"></span>
                         ${agent.hostname || agent.id}
                     </div>
-                    <div class="agent-info">${agent.platform || 'Unknown OS'}</div>
+                    <div class="agent-info">${agent.platform || 'Unknown OS'} ${agent.platform_release || ''}</div>
                     <div class="agent-specs">
                         <span class="spec-badge">💾 ${formatBytes(agent.memory_total || 0)}</span>
                         <span class="spec-badge">⚡ ${agent.cpu_count || '?'} cores</span>
                         ${agent.has_screen ? '<span class="spec-badge">📺 Screen</span>' : ''}
+                        ${agent.has_gui ? '<span class="spec-badge">🖱️ GUI</span>' : ''}
                     </div>
                 </div>
             `).join('');
@@ -909,12 +952,15 @@
 
             // Clear terminal
             clearTerminal();
+            appendToTerminal(`Connected to ${agentId}\nReady to execute commands...\n`);
             
             // Get system info
             sendCommand('system_info', {});
             
-            // Load processes
-            sendCommand('get_processes', {});
+            // Load processes if on that tab
+            if (currentTab === 'processes') {
+                sendCommand('get_processes', {});
+            }
             
             showNotification(`Connected to ${agentId}`, 'success');
         }
@@ -922,7 +968,8 @@
         // Send command to agent
         function sendCommand(type, data = {}) {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
-                showNotification('WebSocket not connected', 'error');
+                showNotification('WebSocket not connected. Reconnecting...', 'error');
+                connectWebSocket();
                 return;
             }
 
@@ -931,11 +978,14 @@
                 return;
             }
 
-            ws.send(JSON.stringify({
+            const message = {
                 type: type,
                 agent_id: selectedAgent,
                 data: data
-            }));
+            };
+            
+            console.log('Sending command:', message);
+            ws.send(JSON.stringify(message));
         }
 
         // Terminal handling
@@ -954,7 +1004,7 @@
 
         function appendToTerminal(text) {
             const output = document.getElementById('terminalOutput');
-            output.textContent += text;
+            output.textContent += text + '\n';
             output.scrollTop = output.scrollHeight;
         }
 
@@ -976,6 +1026,7 @@
             document.getElementById('screenImage').style.display = 'block';
             
             sendCommand('start_screen', {});
+            showNotification('Screen sharing started', 'success');
         }
 
         function stopScreenShare() {
@@ -986,6 +1037,7 @@
             document.getElementById('screenPlaceholder').style.display = 'block';
             
             sendCommand('stop_screen', {});
+            showNotification('Screen sharing stopped', 'success');
         }
 
         function updateScreen(imageData) {
@@ -1045,6 +1097,10 @@
                         <span class="info-label">Python Version</span>
                         <span class="info-value">${info.python_version || 'Unknown'}</span>
                     </div>
+                    <div class="info-item">
+                        <span class="info-label">Boot Time</span>
+                        <span class="info-value">${info.boot_time ? new Date(info.boot_time * 1000).toLocaleString() : 'Unknown'}</span>
+                    </div>
                 </div>
 
                 <div class="info-card">
@@ -1069,31 +1125,31 @@
                         <span class="info-label">Disk Free</span>
                         <span class="info-value">${formatBytes(info.disk_free || 0)}</span>
                     </div>
+                    <div class="info-item">
+                        <span class="info-label">Disk Used</span>
+                        <span class="info-value">${formatBytes(info.disk_used || 0)}</span>
+                    </div>
                 </div>
 
                 <div class="info-card">
                     <h3>Network</h3>
-                    ${info.ip_addresses ? info.ip_addresses.map(ip => `
+                    ${info.ip_addresses ? (Array.isArray(info.ip_addresses) ? info.ip_addresses.map(ip => `
                         <div class="info-item">
                             <span class="info-label">IP Address</span>
                             <span class="info-value">${ip}</span>
                         </div>
-                    `).join('') : '<div class="info-item">No network info</div>'}
+                    `).join('') : `<div class="info-item">${info.ip_addresses}</div>`) : '<div class="info-item">No network info</div>'}
                 </div>
 
                 <div class="info-card">
                     <h3>Capabilities</h3>
                     <div class="info-item">
                         <span class="info-label">GUI Control</span>
-                        <span class="info-value">${info.has_gui ? '✅' : '❌'}</span>
+                        <span class="info-value">${info.has_gui ? '✅ Available' : '❌ Not available'}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Screen Sharing</span>
-                        <span class="info-value">${info.has_screen ? '✅' : '❌'}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Boot Time</span>
-                        <span class="info-value">${info.boot_time ? new Date(info.boot_time * 1000).toLocaleString() : 'Unknown'}</span>
+                        <span class="info-value">${info.has_screen ? '✅ Available' : '❌ Not available'}</span>
                     </div>
                 </div>
             `;
@@ -1156,14 +1212,25 @@
         function logout() {
             localStorage.removeItem('token');
             token = null;
-            if (ws) ws.close();
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('dashboard').style.display = 'none';
             selectedAgent = null;
+            showNotification('Logged out', 'success');
         }
 
         // Auto refresh agents every 30 seconds
-        setInterval(loadAgents, 30000);
+        setInterval(() => {
+            if (token) {
+                loadAgents();
+            }
+        }, 30000);
+
+        // Add console logging to help debug
+        console.log('Frontend initialized with API_URL:', API_URL);
     </script>
 </body>
 </html>
