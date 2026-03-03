@@ -3,476 +3,664 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xotiics PC Control</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Professional Remote Desktop</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
         }
 
         :root {
-            --primary: #00ff88;
-            --primary-dark: #00cc66;
-            --accent: #ff3366;
-            --bg-dark: #0a0a0f;
-            --bg-darker: #050507;
-            --bg-light: #1a1a24;
-            --text: #ffffff;
-            --text-dim: #8888aa;
-            --neon-glow: 0 0 20px rgba(0, 255, 136, 0.3);
-            --border-glow: 0 0 0 1px rgba(0, 255, 136, 0.2);
+            --bg-primary: #0a0c10;
+            --bg-secondary: #1a1e24;
+            --bg-tertiary: #252a32;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent-primary: #4f9eff;
+            --accent-secondary: #6c5ce7;
+            --accent-danger: #ff4757;
+            --accent-success: #00d68f;
+            --accent-warning: #ffaa00;
+            --border-color: #2f3542;
+            --shadow-color: rgba(0, 0, 0, 0.3);
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
-            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #0f1217 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
             overflow: hidden;
-            position: relative;
-        }
-
-        /* Matrix Rain Effect */
-        #matrixCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            opacity: 0.15;
-            z-index: 0;
         }
 
         #app {
-            position: relative;
-            z-index: 1;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: rgba(10, 10, 15, 0.85);
-            backdrop-filter: blur(10px);
         }
 
         /* Login Screen */
-        .login-screen {
-            height: 100%;
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
-            align-items: center;
             justify-content: center;
-            background: radial-gradient(circle at center, rgba(0, 255, 136, 0.1) 0%, transparent 70%);
+            align-items: center;
+            z-index: 1000;
         }
 
-        .login-box {
-            background: var(--bg-darker);
-            border: 1px solid var(--primary);
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 50px;
-            width: 400px;
-            box-shadow: var(--neon-glow);
-            animation: glowPulse 2s infinite;
-        }
-
-        @keyframes glowPulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(0, 255, 136, 0.5); }
-        }
-
-        .login-box h2 {
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 32px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .input-group {
-            margin-bottom: 25px;
-        }
-
-        .input-group input {
+            padding: 40px;
             width: 100%;
-            padding: 15px;
-            background: var(--bg-light);
-            border: 1px solid var(--text-dim);
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            color: #555;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
             border-radius: 10px;
-            color: var(--text);
             font-size: 16px;
             transition: all 0.3s;
         }
 
-        .input-group input:focus {
+        .form-group input:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: var(--neon-glow);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         .login-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border: none;
+            padding: 14px;
             border-radius: 10px;
-            color: var(--bg-dark);
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: transform 0.2s;
         }
 
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: var(--neon-glow);
         }
 
-        /* Main Dashboard */
-        .dashboard {
-            display: flex;
-            height: 100%;
-            overflow: hidden;
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
         }
 
-        /* Sidebar */
-        .sidebar {
-            width: 300px;
-            background: var(--bg-darker);
-            border-right: 1px solid var(--primary);
-            display: flex;
+        .error-message {
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            color: #ff4d4f;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* Main Interface */
+        #main-interface {
+            display: none;
+            height: 100vh;
             flex-direction: column;
-            overflow: hidden;
         }
 
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--primary);
+        /* Top Bar */
+        .top-bar {
+            background: var(--bg-secondary);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px var(--shadow-color);
+            z-index: 10;
         }
 
-        .sidebar-header h3 {
-            color: var(--primary);
-            margin-bottom: 5px;
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .agents-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-        }
-
-        .agent-card {
-            background: var(--bg-light);
-            border: 1px solid var(--text-dim);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .agent-card:hover {
-            border-color: var(--primary);
-            transform: translateX(5px);
-            box-shadow: var(--neon-glow);
-        }
-
-        .agent-card.selected {
-            border-color: var(--primary);
-            background: rgba(0, 255, 136, 0.1);
-        }
-
-        .agent-status {
-            display: inline-block;
+        .status-indicator {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: var(--primary);
-            margin-right: 8px;
-            animation: pulse 2s infinite;
+            background: #ffaa00;
+            transition: background-color 0.3s;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .status-indicator.connected {
+            background: var(--accent-success);
+            box-shadow: 0 0 10px var(--accent-success);
+        }
+
+        .status-indicator.disconnected {
+            background: var(--accent-danger);
+        }
+
+        .agent-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .agent-selector select {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            min-width: 200px;
+        }
+
+        .agent-selector button {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .agent-selector button:hover {
+            background: #3a7ae0;
+        }
+
+        .stats-display {
+            display: flex;
+            gap: 20px;
+            font-size: 12px;
+            color: var(--text-secondary);
         }
 
         /* Main Content */
         .main-content {
+            display: flex;
             flex: 1;
+            overflow: hidden;
+        }
+
+        /* Left Panel - System Info */
+        .left-panel {
+            width: 300px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .panel-header {
+            padding: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-section {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info-item {
+            background: var(--bg-tertiary);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--accent-primary);
+            transition: width 0.3s;
+        }
+
+        /* Center Panel - Screen View */
+        .center-panel {
+            flex: 1;
+            background: var(--bg-primary);
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
 
-        /* Toolbar */
-        .toolbar {
-            padding: 15px 20px;
-            background: var(--bg-darker);
-            border-bottom: 1px solid var(--primary);
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .tool-btn {
-            padding: 10px 20px;
-            background: var(--bg-light);
-            border: 1px solid var(--text-dim);
-            border-radius: 8px;
-            color: var(--text);
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tool-btn:hover {
-            border-color: var(--primary);
-            box-shadow: var(--neon-glow);
-        }
-
-        .tool-btn.active {
-            background: var(--primary);
-            color: var(--bg-dark);
-            border-color: var(--primary);
-        }
-
-        /* Screen Container */
         .screen-container {
             flex: 1;
+            background: #000;
             display: flex;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* Remote Screen */
-        .remote-screen {
-            flex: 1;
-            background: var(--bg-darker);
-            display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             overflow: hidden;
             position: relative;
             cursor: crosshair;
         }
 
-        #screenImage {
+        #screenCanvas {
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            border: 1px solid var(--primary);
-            box-shadow: var(--neon-glow);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
-        /* Control Panel */
-        .control-panel {
+        .screen-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 5;
+        }
+
+        .screen-control-btn {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s;
+        }
+
+        .screen-control-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            border-color: var(--accent-primary);
+        }
+
+        /* Right Panel - Terminal & File Browser */
+        .right-panel {
             width: 350px;
-            background: var(--bg-darker);
-            border-left: 1px solid var(--primary);
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
         }
 
-        .panel-tabs {
+        .tab-container {
             display: flex;
-            border-bottom: 1px solid var(--primary);
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .panel-tab {
+        .tab {
             flex: 1;
-            padding: 15px;
+            padding: 12px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            transition: all 0.2s;
             border-bottom: 2px solid transparent;
         }
 
-        .panel-tab.active {
-            border-bottom-color: var(--primary);
-            color: var(--primary);
+        .tab.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+            background: var(--bg-tertiary);
         }
 
-        .panel-content {
+        .tab-content {
+            flex: 1;
+            overflow: hidden;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Terminal */
+        .terminal {
+            background: #1e1e1e;
+            color: #f0f0f0;
+            font-family: 'Courier New', monospace;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-output {
             flex: 1;
             overflow-y: auto;
-            padding: 15px;
+            padding: 10px;
+            font-size: 13px;
+            line-height: 1.5;
         }
 
-        /* Quick Actions */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
+        .terminal-line {
+            margin-bottom: 2px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .terminal-prompt {
+            display: flex;
+            padding: 10px;
+            background: #2d2d2d;
+        }
+
+        .terminal-prompt span {
+            color: var(--accent-success);
+            margin-right: 5px;
+        }
+
+        .terminal-prompt input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+        }
+
+        /* File Browser */
+        .file-browser {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-path {
+            padding: 10px;
+            background: var(--bg-tertiary);
+            display: flex;
             gap: 10px;
-            margin-bottom: 20px;
         }
 
-        .action-btn {
-            padding: 15px;
-            background: var(--bg-light);
-            border: 1px solid var(--text-dim);
-            border-radius: 8px;
-            color: var(--text);
+        .file-path input {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            border-radius: 4px;
+        }
+
+        .file-path button {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s;
+        }
+
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .file-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .file-item.dir {
+            color: var(--accent-primary);
+        }
+
+        .file-icon {
+            margin-right: 10px;
+            width: 20px;
             text-align: center;
         }
 
-        .action-btn:hover {
-            border-color: var(--primary);
-            transform: scale(1.05);
-        }
-
-        /* Windows List */
-        .window-item {
-            background: var(--bg-light);
-            border: 1px solid var(--text-dim);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .window-item:hover {
-            border-color: var(--primary);
-        }
-
-        .window-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .window-actions {
-            display: flex;
-            gap: 5px;
-            margin-top: 8px;
-        }
-
-        .window-btn {
-            padding: 5px 10px;
-            background: var(--bg-darker);
-            border: 1px solid var(--text-dim);
-            border-radius: 4px;
-            color: var(--text);
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .window-btn:hover {
-            border-color: var(--primary);
-        }
-
-        /* Process List */
-        .process-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px;
-            background: var(--bg-light);
-            border: 1px solid var(--text-dim);
-            border-radius: 6px;
-            margin-bottom: 6px;
-        }
-
-        .process-info {
+        .file-name {
             flex: 1;
         }
 
-        .process-name {
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .process-pid {
-            font-size: 11px;
-            color: var(--text-dim);
-        }
-
-        .kill-process {
-            padding: 4px 8px;
-            background: var(--accent);
-            border: none;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
+        .file-size {
+            color: var(--text-secondary);
             font-size: 12px;
+            margin-right: 10px;
         }
 
-        /* Virtual Keyboard */
-        .virtual-keyboard {
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
+        .file-actions {
+            display: flex;
             gap: 5px;
-            padding: 10px;
-            background: var(--bg-light);
-            border-radius: 10px;
-            margin-top: 15px;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        .key {
-            padding: 10px 5px;
-            background: var(--bg-darker);
-            border: 1px solid var(--text-dim);
-            border-radius: 5px;
-            color: var(--text);
+        .file-item:hover .file-actions {
+            opacity: 1;
+        }
+
+        .file-action {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
             cursor: pointer;
-            text-align: center;
+            padding: 2px 5px;
             font-size: 12px;
-            transition: all 0.1s;
         }
 
-        .key:active {
-            background: var(--primary);
-            color: var(--bg-dark);
-            transform: scale(0.95);
+        .file-action:hover {
+            color: var(--accent-primary);
         }
 
-        .key.space {
-            grid-column: span 5;
-        }
-
-        .key.enter {
-            grid-column: span 2;
-        }
-
-        /* Cursor Position Indicator */
-        .cursor-position {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 1px solid var(--primary);
-            border-radius: 5px;
-            padding: 5px 10px;
-            font-size: 12px;
-            color: var(--primary);
-            pointer-events: none;
-        }
-
-        /* Loading Overlay */
-        .loading-overlay {
-            position: absolute;
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
+            justify-content: center;
+            align-items: center;
         }
 
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid var(--primary);
-            border-top-color: transparent;
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal-btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .modal-btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .modal-btn-danger {
+            background: var(--accent-danger);
+            color: white;
+        }
+
+        /* Upload Progress */
+        .upload-progress {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .upload-progress.active {
+            display: block;
+        }
+
+        .progress-item {
+            margin-bottom: 10px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent-primary);
+            transition: width 0.3s;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -481,787 +669,1179 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            background: var(--bg-darker);
-            border: 1px solid var(--primary);
-            border-radius: 10px;
-            color: var(--text);
-            z-index: 2000;
-            animation: slideIn 0.3s;
-            box-shadow: var(--neon-glow);
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .left-panel {
+                width: 250px;
+            }
+            .right-panel {
+                width: 300px;
+            }
         }
 
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
             }
-            to {
-                transform: translateX(0);
-                opacity: 1;
+            .left-panel, .right-panel {
+                width: 100%;
+                height: 300px;
             }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-color);
+        }
+
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <canvas id="matrixCanvas"></canvas>
-    
     <div id="app">
         <!-- Login Screen -->
-        <div id="loginScreen" class="login-screen">
-            <div class="login-box">
-                <h2><i class="fas fa-gamepad"></i> REMOTE GAMING</h2>
-                <form id="loginForm">
-                    <div class="input-group">
-                        <input type="text" id="username" placeholder="Username" required>
+        <div id="login-screen">
+            <div class="login-container">
+                <div class="login-header">
+                    <h1>Remote Desktop Control</h1>
+                    <p>Professional Edition</p>
+                </div>
+                <div class="login-form">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="username" placeholder="Enter username" autocomplete="off">
                     </div>
-                    <div class="input-group">
-                        <input type="password" id="password" placeholder="Password" required>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="password" placeholder="Enter password">
                     </div>
-                    <button type="submit" class="login-btn">
-                        <i class="fas fa-sign-in-alt"></i> CONNECT
-                    </button>
-                </form>
-                <div id="loginError" style="color: var(--accent); text-align: center; margin-top: 15px;"></div>
+                    <div id="login-error" class="error-message" style="display: none;"></div>
+                    <button class="login-btn" id="loginBtn">Login</button>
+                </div>
             </div>
         </div>
 
-        <!-- Main Dashboard -->
-        <div id="dashboard" style="display: none; height: 100%;">
-            <div class="dashboard">
-                <!-- Sidebar -->
-                <div class="sidebar">
-                    <div class="sidebar-header">
-                        <h3><i class="fas fa-desktop"></i> CONNECTED PCS</h3>
-                        <p id="agentCount">0 PCs online</p>
+        <!-- Main Interface -->
+        <div id="main-interface">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="connection-status">
+                    <div class="status-indicator" id="connectionIndicator"></div>
+                    <span id="connectionText">Disconnected</span>
+                </div>
+                
+                <div class="agent-selector">
+                    <select id="agentSelect">
+                        <option value="">Select an agent...</option>
+                    </select>
+                    <button id="connectAgentBtn">Connect</button>
+                </div>
+
+                <div class="stats-display" id="stats">
+                    <span>📊 FPS: <span id="fps">0</span></span>
+                    <span>⏱️ Latency: <span id="latency">0</span>ms</span>
+                    <span>📡 BW: <span id="bandwidth">0</span> KB/s</span>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <!-- Left Panel - System Info -->
+                <div class="left-panel">
+                    <div class="panel-header">
+                        <span>System Overview</span>
+                        <span id="refreshTime"></span>
                     </div>
-                    <div class="agents-list" id="agentsList">
-                        <div style="text-align: center; color: var(--text-dim); padding: 20px;">
-                            <i class="fas fa-spinner fa-spin fa-2x"></i>
-                            <p>Waiting for agents...</p>
+                    
+                    <div class="info-section">
+                        <div class="info-title">SYSTEM</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Hostname</div>
+                                <div class="info-value" id="hostname">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Platform</div>
+                                <div class="info-value" id="platform">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">CPU</div>
+                                <div class="info-value" id="cpu">-</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Cores</div>
+                                <div class="info-value" id="cores">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <div class="info-title">HARDWARE</div>
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <div class="info-label">CPU Usage</div>
+                            <div id="cpuUsage">0%</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="cpuProgress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="info-item" style="margin-bottom: 10px;">
+                            <div class="info-label">Memory</div>
+                            <div id="memory">0/0 GB</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="memoryProgress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Disk</div>
+                            <div id="disk">0/0 GB</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="diskProgress" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <div class="info-title">NETWORK</div>
+                        <div id="networkInfo">
+                            <div class="info-item">
+                                <div class="info-label">IP Addresses</div>
+                                <div id="ipAddresses">-</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-section">
+                        <div class="info-title">GPU</div>
+                        <div id="gpuInfo" class="info-item">
+                            <div class="info-label">Graphics</div>
+                            <div id="gpu">-</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Main Content -->
-                <div class="main-content">
-                    <!-- Toolbar -->
-                    <div class="toolbar">
-                        <div style="flex: 1;">
-                            <span id="selectedAgentName" style="color: var(--primary);">No PC Selected</span>
+                <!-- Center Panel - Screen View -->
+                <div class="center-panel">
+                    <div class="screen-container" id="screenContainer">
+                        <canvas id="screenCanvas"></canvas>
+                        <div class="screen-controls">
+                            <button class="screen-control-btn" id="fullscreenBtn">⛶ Fullscreen</button>
+                            <button class="screen-control-btn" id="qualityBtn">HD</button>
+                            <button class="screen-control-btn" id="streamToggle">⏸️ Pause</button>
                         </div>
-                        <button class="tool-btn" onclick="refreshAgents()">
-                            <i class="fas fa-sync-alt"></i> Refresh
-                        </button>
-                        <button class="tool-btn" onclick="toggleFullscreen()">
-                            <i class="fas fa-expand"></i> Fullscreen
-                        </button>
-                        <button class="tool-btn" onclick="logout()">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Panel - Terminal & File Browser -->
+                <div class="right-panel">
+                    <div class="tab-container">
+                        <div class="tab active" data-tab="terminal">Terminal</div>
+                        <div class="tab" data-tab="files">Files</div>
+                        <div class="tab" data-tab="clipboard">Clipboard</div>
                     </div>
 
-                    <!-- Screen Container -->
-                    <div class="screen-container">
-                        <!-- Remote Screen -->
-                        <div class="remote-screen" id="remoteScreen">
-                            <img id="screenImage" src="" alt="Remote Screen" style="display: none;">
-                            <div id="screenPlaceholder" style="color: var(--text-dim); text-align: center;">
-                                <i class="fas fa-desktop fa-4x"></i>
-                                <p>Select a PC and click Start to begin</p>
+                    <!-- Terminal Tab -->
+                    <div class="tab-content active" id="terminal-tab">
+                        <div class="terminal">
+                            <div class="terminal-output" id="terminalOutput">
+                                <div class="terminal-line">Welcome to Remote Terminal</div>
+                                <div class="terminal-line">Type 'help' for available commands</div>
+                                <div class="terminal-line">&nbsp;</div>
                             </div>
-                            
-                            <!-- Cursor Position -->
-                            <div id="cursorPosition" class="cursor-position" style="display: none;">
-                                X: 0, Y: 0
+                            <div class="terminal-prompt">
+                                <span>$</span>
+                                <input type="text" id="terminalInput" placeholder="Enter command...">
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Control Panel -->
-                        <div class="control-panel">
-                            <div class="panel-tabs">
-                                <div class="panel-tab active" onclick="switchPanelTab('controls')">
-                                    <i class="fas fa-gamepad"></i> Controls
-                                </div>
-                                <div class="panel-tab" onclick="switchPanelTab('windows')">
-                                    <i class="fas fa-window-maximize"></i> Windows
-                                </div>
-                                <div class="panel-tab" onclick="switchPanelTab('processes')">
-                                    <i class="fas fa-tasks"></i> Processes
-                                </div>
+                    <!-- Files Tab -->
+                    <div class="tab-content" id="files-tab">
+                        <div class="file-browser">
+                            <div class="file-path">
+                                <input type="text" id="currentPath" value="C:\\">
+                                <button id="navigateBtn">Go</button>
                             </div>
+                            <div class="file-list" id="fileList">
+                                <!-- Files will be listed here -->
+                            </div>
+                        </div>
+                    </div>
 
-                            <div class="panel-content">
-                                <!-- Controls Panel -->
-                                <div id="controlsPanel">
-                                    <div class="quick-actions">
-                                        <button class="action-btn" onclick="startScreenShare()" id="startScreenBtn">
-                                            <i class="fas fa-play"></i> Start
-                                        </button>
-                                        <button class="action-btn" onclick="stopScreenShare()" id="stopScreenBtn" style="display: none;">
-                                            <i class="fas fa-stop"></i> Stop
-                                        </button>
-                                        <button class="action-btn" onclick="sendKey('win')">
-                                            <i class="fab fa-windows"></i> Win
-                                        </button>
-                                        <button class="action-btn" onclick="sendKey('ctrl+alt+del')">
-                                            <i class="fas fa-exclamation-triangle"></i> CAD
-                                        </button>
-                                        <button class="action-btn" onclick="sendKey('alt+tab')">
-                                            <i class="fas fa-exchange-alt"></i> Alt+Tab
-                                        </button>
-                                        <button class="action-btn" onclick="sendKey('ctrl+shift+esc')">
-                                            <i class="fas fa-tasks"></i> Task Mgr
-                                        </button>
-                                        <button class="action-btn" onclick="sendKey('esc')">
-                                            <i class="fas fa-times"></i> Esc
-                                        </button>
-                                        <button class="action-btn" onclick="sendKey('enter')">
-                                            <i class="fas fa-check"></i> Enter
-                                        </button>
-                                    </div>
-
-                                    <!-- Virtual Keyboard -->
-                                    <h4 style="margin: 15px 0 10px; color: var(--primary);">
-                                        <i class="fas fa-keyboard"></i> Virtual Keyboard
-                                    </h4>
-                                    <div class="virtual-keyboard">
-                                        <div class="key" onclick="sendKey('`')">`</div>
-                                        <div class="key" onclick="sendKey('1')">1</div>
-                                        <div class="key" onclick="sendKey('2')">2</div>
-                                        <div class="key" onclick="sendKey('3')">3</div>
-                                        <div class="key" onclick="sendKey('4')">4</div>
-                                        <div class="key" onclick="sendKey('5')">5</div>
-                                        <div class="key" onclick="sendKey('6')">6</div>
-                                        <div class="key" onclick="sendKey('7')">7</div>
-                                        <div class="key" onclick="sendKey('8')">8</div>
-                                        <div class="key" onclick="sendKey('9')">9</div>
-                                        <div class="key" onclick="sendKey('0')">0</div>
-                                        <div class="key" onclick="sendKey('-')">-</div>
-                                        <div class="key" onclick="sendKey('=')">=</div>
-                                        <div class="key" onclick="sendKey('backspace')">⌫</div>
-                                        
-                                        <div class="key" onclick="sendKey('tab')">Tab</div>
-                                        <div class="key" onclick="sendKey('q')">Q</div>
-                                        <div class="key" onclick="sendKey('w')">W</div>
-                                        <div class="key" onclick="sendKey('e')">E</div>
-                                        <div class="key" onclick="sendKey('r')">R</div>
-                                        <div class="key" onclick="sendKey('t')">T</div>
-                                        <div class="key" onclick="sendKey('y')">Y</div>
-                                        <div class="key" onclick="sendKey('u')">U</div>
-                                        <div class="key" onclick="sendKey('i')">I</div>
-                                        <div class="key" onclick="sendKey('o')">O</div>
-                                        <div class="key" onclick="sendKey('p')">P</div>
-                                        <div class="key" onclick="sendKey('[')">[</div>
-                                        <div class="key" onclick="sendKey(']')">]</div>
-                                        <div class="key" onclick="sendKey('\\')">\</div>
-                                        
-                                        <div class="key" onclick="sendKey('capslock')">Caps</div>
-                                        <div class="key" onclick="sendKey('a')">A</div>
-                                        <div class="key" onclick="sendKey('s')">S</div>
-                                        <div class="key" onclick="sendKey('d')">D</div>
-                                        <div class="key" onclick="sendKey('f')">F</div>
-                                        <div class="key" onclick="sendKey('g')">G</div>
-                                        <div class="key" onclick="sendKey('h')">H</div>
-                                        <div class="key" onclick="sendKey('j')">J</div>
-                                        <div class="key" onclick="sendKey('k')">K</div>
-                                        <div class="key" onclick="sendKey('l')">L</div>
-                                        <div class="key" onclick="sendKey(';')">;</div>
-                                        <div class="key" onclick="sendKey('\'')">'</div>
-                                        <div class="key" onclick="sendKey('enter')" class="enter">Enter</div>
-                                        
-                                        <div class="key" onclick="sendKey('shift')">Shift</div>
-                                        <div class="key" onclick="sendKey('z')">Z</div>
-                                        <div class="key" onclick="sendKey('x')">X</div>
-                                        <div class="key" onclick="sendKey('c')">C</div>
-                                        <div class="key" onclick="sendKey('v')">V</div>
-                                        <div class="key" onclick="sendKey('b')">B</div>
-                                        <div class="key" onclick="sendKey('n')">N</div>
-                                        <div class="key" onclick="sendKey('m')">M</div>
-                                        <div class="key" onclick="sendKey(',')">,</div>
-                                        <div class="key" onclick="sendKey('.')">.</div>
-                                        <div class="key" onclick="sendKey('/')">/</div>
-                                        <div class="key" onclick="sendKey('shift')">Shift</div>
-                                        
-                                        <div class="key" onclick="sendKey('ctrl')">Ctrl</div>
-                                        <div class="key" onclick="sendKey('win')">Win</div>
-                                        <div class="key" onclick="sendKey('alt')">Alt</div>
-                                        <div class="key space" onclick="sendKey('space')">Space</div>
-                                        <div class="key" onclick="sendKey('alt')">Alt</div>
-                                        <div class="key" onclick="sendKey('win')">Win</div>
-                                        <div class="key" onclick="sendKey('ctrl')">Ctrl</div>
-                                    </div>
-
-                                    <!-- Mouse Settings -->
-                                    <h4 style="margin: 20px 0 10px; color: var(--primary);">
-                                        <i class="fas fa-mouse"></i> Mouse Settings
-                                    </h4>
-                                    <div style="display: flex; gap: 10px;">
-                                        <button class="action-btn" onclick="setMouseButton('left')" id="mouseLeftBtn">Left</button>
-                                        <button class="action-btn" onclick="setMouseButton('right')" id="mouseRightBtn">Right</button>
-                                        <button class="action-btn" onclick="setMouseButton('middle')" id="mouseMiddleBtn">Middle</button>
-                                    </div>
-                                </div>
-
-                                <!-- Windows Panel -->
-                                <div id="windowsPanel" style="display: none;">
-                                    <div id="windowsList"></div>
-                                </div>
-
-                                <!-- Processes Panel -->
-                                <div id="processesPanel" style="display: none;">
-                                    <div id="processesList"></div>
-                                </div>
+                    <!-- Clipboard Tab -->
+                    <div class="tab-content" id="clipboard-tab">
+                        <div style="padding: 15px;">
+                            <h4>Clipboard Sync</h4>
+                            <textarea id="clipboardText" rows="10" style="width: 100%; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 10px; border-radius: 4px;"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                <button id="copyToRemote" style="flex: 1; padding: 8px; background: var(--accent-primary); color: white; border: none; border-radius: 4px;">Copy to Remote</button>
+                                <button id="copyFromRemote" style="flex: 1; padding: 8px; background: var(--accent-secondary); color: white; border: none; border-radius: 4px;">Copy from Remote</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
-        <div class="loading-spinner"></div>
+        <!-- Upload Progress Modal -->
+        <div class="upload-progress" id="uploadProgress">
+            <div class="progress-item">
+                <div class="progress-header">
+                    <span>Uploading file...</span>
+                    <span id="uploadPercent">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar-fill" id="uploadProgressBar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- File Upload Modal -->
+        <div class="modal" id="uploadModal">
+            <div class="modal-content">
+                <div class="modal-header">Upload File</div>
+                <div class="modal-body">
+                    <input type="file" id="fileInput" multiple>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-btn modal-btn-secondary" onclick="closeUploadModal()">Cancel</button>
+                    <button class="modal-btn modal-btn-primary" onclick="uploadFiles()">Upload</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
         // Configuration
+        const WS_URL = 'wss://remote-pc-backend.onrender.com';
         const API_URL = 'https://remote-pc-backend.onrender.com';
         
         // State
-        let token = localStorage.getItem('token');
-        let ws = null;
-        let clientId = 'web-' + Math.random().toString(36).substr(2, 9);
-        let selectedAgent = null;
-        let screenActive = false;
-        let currentMouseButton = 'left';
-        let isDragging = false;
-        let lastMouseX = 0;
-        let lastMouseY = 0;
-        let screenWidth = 0;
-        let screenHeight = 0;
-
-        // Matrix Rain Effect
-        const canvas = document.getElementById('matrixCanvas');
-        const ctx = canvas.getContext('2d');
-
-        function initMatrix() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-
-            const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
-            const fontSize = 14;
-            const columns = canvas.width / fontSize;
-            const drops = [];
-
-            for (let i = 0; i < columns; i++) {
-                drops[i] = 1;
-            }
-
-            function draw() {
-                ctx.fillStyle = 'rgba(10, 10, 15, 0.05)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                ctx.fillStyle = '#00ff88';
-                ctx.font = fontSize + 'px monospace';
-
-                for (let i = 0; i < drops.length; i++) {
-                    const text = chars[Math.floor(Math.random() * chars.length)];
-                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-                    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                        drops[i] = 0;
-                    }
-                    drops[i]++;
-                }
-            }
-
-            setInterval(draw, 33);
-        }
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+        let socket = null;
+        let token = null;
+        let refreshToken = null;
+        let clientId = null;
+        let currentAgent = null;
+        let authenticated = false;
+        let streaming = false;
+        let canvas = document.getElementById('screenCanvas');
+        let ctx = canvas.getContext('2d');
+        let frameCount = 0;
+        let lastFrameTime = performance.now();
+        let fps = 0;
+        let latency = 0;
+        let bandwidth = 0;
+        let lastBytesReceived = 0;
+        let lastBandwidthTime = performance.now();
+        
+        // System info
+        let systemInfo = {};
+        
+        // File browser state
+        let currentFilePath = 'C:\\';
+        
+        // Terminal state
+        let terminalHistory = [];
+        let historyIndex = -1;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            checkSavedToken();
         });
-
-        initMatrix();
-
-        // Auto-login check
-        if (token) {
-            showDashboard();
-            connectWebSocket();
-            loadAgents();
-        } else {
-            document.getElementById('loginScreen').style.display = 'flex';
+        
+        function setupEventListeners() {
+            // Login
+            document.getElementById('loginBtn').addEventListener('click', login);
+            document.getElementById('username').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
+            
+            // Agent selection
+            document.getElementById('connectAgentBtn').addEventListener('click', connectToAgent);
+            
+            // Tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+            
+            // Terminal
+            document.getElementById('terminalInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendCommand();
+            });
+            document.getElementById('terminalInput').addEventListener('keydown', handleTerminalHistory);
+            
+            // File browser
+            document.getElementById('navigateBtn').addEventListener('click', () => {
+                navigateTo(document.getElementById('currentPath').value);
+            });
+            
+            // Screen controls
+            document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+            document.getElementById('qualityBtn').addEventListener('click', toggleQuality);
+            document.getElementById('streamToggle').addEventListener('click', toggleStream);
+            
+            // Screen mouse events
+            document.getElementById('screenContainer').addEventListener('mousemove', handleMouseMove);
+            document.getElementById('screenContainer').addEventListener('mousedown', handleMouseDown);
+            document.getElementById('screenContainer').addEventListener('mouseup', handleMouseUp);
+            document.getElementById('screenContainer').addEventListener('wheel', handleMouseWheel);
+            
+            // Keyboard events
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            
+            // Clipboard
+            document.getElementById('copyToRemote').addEventListener('click', copyToRemote);
+            document.getElementById('copyFromRemote').addEventListener('click', copyFromRemote);
         }
-
-        // Login handler
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        
+        async function checkSavedToken() {
+            const savedToken = localStorage.getItem('access_token');
+            const savedRefreshToken = localStorage.getItem('refresh_token');
+            
+            if (savedToken && savedRefreshToken) {
+                token = savedToken;
+                refreshToken = savedRefreshToken;
+                await connectWebSocket();
+            }
+        }
+        
+        async function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
             
-            showLoading(true);
+            if (!username || !password) {
+                showError('Please enter username and password');
+                return;
+            }
             
             try {
-                const response = await fetch(`${API_URL}/api/login`, {
+                const response = await fetch(`${API_URL}/login`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
                     body: JSON.stringify({ username, password })
                 });
-
-                const data = await response.json();
                 
-                if (data.success && data.access_token) {
-                    token = data.access_token;
-                    localStorage.setItem('token', token);
-                    
-                    showDashboard();
-                    connectWebSocket();
-                    await loadAgents();
-                    showNotification('Connected successfully!', 'success');
-                } else {
-                    showNotification(data.message || 'Login failed', 'error');
+                if (!response.ok) {
+                    throw new Error('Invalid credentials');
                 }
+                
+                const data = await response.json();
+                token = data.access_token;
+                refreshToken = data.refresh_token;
+                
+                // Save tokens
+                localStorage.setItem('access_token', token);
+                localStorage.setItem('refresh_token', refreshToken);
+                
+                // Connect WebSocket
+                await connectWebSocket();
+                
             } catch (error) {
-                showNotification('Connection error', 'error');
-            } finally {
-                showLoading(false);
+                showError(error.message);
             }
-        });
-
-        // WebSocket connection
-        function connectWebSocket() {
-            const wsUrl = API_URL.replace('https', 'wss') + `/ws/client/${clientId}`;
-            
-            ws = new WebSocket(wsUrl);
-
-            ws.onopen = () => {
-                console.log('WebSocket connected');
-            };
-
-            ws.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    handleMessage(data);
-                } catch (error) {
-                    console.error('Error parsing message:', error);
-                }
-            };
-
-            ws.onclose = () => {
-                console.log('WebSocket disconnected');
-                setTimeout(connectWebSocket, 5000);
-            };
         }
-
-        // Handle messages
-        function handleMessage(data) {
+        
+        async function connectWebSocket() {
+            try {
+                socket = new WebSocket(WS_URL);
+                
+                socket.onopen = () => {
+                    console.log('WebSocket connected');
+                    updateConnectionStatus('connecting');
+                    
+                    // Authenticate
+                    socket.send(JSON.stringify({
+                        type: 'auth',
+                        token: token
+                    }));
+                };
+                
+                socket.onmessage = (event) => {
+                    handleWebSocketMessage(JSON.parse(event.data));
+                };
+                
+                socket.onclose = () => {
+                    console.log('WebSocket disconnected');
+                    updateConnectionStatus('disconnected');
+                    
+                    // Try to reconnect after 5 seconds
+                    setTimeout(connectWebSocket, 5000);
+                };
+                
+                socket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                };
+                
+            } catch (error) {
+                console.error('Connection error:', error);
+                setTimeout(connectWebSocket, 5000);
+            }
+        }
+        
+        function handleWebSocketMessage(data) {
+            // Track bandwidth
+            const messageSize = JSON.stringify(data).length;
+            bandwidth += messageSize;
+            
+            // Update latency
+            if (data.type === 'pong') {
+                latency = Date.now() - data.timestamp;
+            }
+            
             switch (data.type) {
-                case 'screen_frame':
-                    updateScreen(data.image);
-                    if (data.width && data.height) {
-                        screenWidth = data.width;
-                        screenHeight = data.height;
+                case 'auth_success':
+                    authenticated = true;
+                    clientId = data.client_id;
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-interface').style.display = 'flex';
+                    updateConnectionStatus('connected');
+                    
+                    // Request agents list
+                    socket.send(JSON.stringify({
+                        type: 'get_agents'
+                    }));
+                    break;
+                    
+                case 'auth_error':
+                    showError('Authentication failed');
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    break;
+                    
+                case 'agent_list':
+                    updateAgentList(data.agents);
+                    break;
+                    
+                case 'agent_connected':
+                    addAgentToList(data.agent);
+                    break;
+                    
+                case 'agent_disconnected':
+                    removeAgentFromList(data.agent_id);
+                    if (currentAgent === data.agent_id) {
+                        currentAgent = null;
+                        document.getElementById('connectAgentBtn').textContent = 'Connect';
                     }
                     break;
                     
-                case 'window_list':
-                    updateWindowsList(data.windows);
+                case 'agent_assigned':
+                    currentAgent = data.agent_id;
+                    document.getElementById('connectAgentBtn').textContent = 'Disconnect';
+                    document.getElementById('agentSelect').value = data.agent_id;
+                    
+                    // Request system info
+                    socket.send(JSON.stringify({
+                        type: 'get_system_info',
+                        agent_id: currentAgent
+                    }));
+                    
+                    // Start screen stream
+                    socket.send(JSON.stringify({
+                        type: 'start_stream',
+                        agent_id: currentAgent,
+                        config: {
+                            quality: 85,
+                            fps: 30,
+                            monitor: 1
+                        }
+                    }));
+                    streaming = true;
+                    document.getElementById('streamToggle').textContent = '⏸️ Pause';
                     break;
                     
-                case 'process_list':
-                    updateProcessesList(data.processes);
-                    break;
-                    
-                case 'screen_size':
-                    screenWidth = data.width;
-                    screenHeight = data.height;
-                    break;
-                    
-                case 'cursor_position':
-                    document.getElementById('cursorPosition').style.display = 'block';
-                    document.getElementById('cursorPosition').innerHTML = `X: ${data.x}, Y: ${data.y}`;
+                case 'agent_deselected':
+                    currentAgent = null;
+                    document.getElementById('connectAgentBtn').textContent = 'Connect';
+                    streaming = false;
+                    document.getElementById('streamToggle').textContent = '▶️ Resume';
                     break;
                     
                 case 'system_info':
-                    updateSystemInfo(data.data);
+                    updateSystemInfo(data.info);
+                    break;
+                    
+                case 'video_frame':
+                case 'screenshot':
+                    displayFrame(data);
+                    updateFPS();
+                    break;
+                    
+                case 'command_output':
+                    appendToTerminal(data.output);
+                    break;
+                    
+                case 'file_list':
+                    updateFileList(data.path, data.files);
+                    break;
+                    
+                case 'file_chunk':
+                    handleFileChunk(data);
+                    break;
+                    
+                case 'file_transfer_complete':
+                    showNotification('File transfer complete');
+                    document.getElementById('uploadProgress').classList.remove('active');
+                    break;
+                    
+                case 'clipboard':
+                    document.getElementById('clipboardText').value = data.content.text || '';
+                    break;
+                    
+                case 'stats':
+                    updateStats(data.stats);
+                    break;
+                    
+                case 'error':
+                    showError(data.message);
+                    break;
+                    
+                case 'pong':
+                    latency = Date.now() - data.timestamp;
                     break;
             }
         }
-
-        // Load agents
-        async function loadAgents() {
-            try {
-                const response = await fetch(`${API_URL}/api/agents`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (!response.ok) {
-                    if (response.status === 401) logout();
-                    return;
-                }
-
-                const agents = await response.json();
-                updateAgentsList(agents);
-            } catch (error) {
-                console.error('Error loading agents:', error);
-            }
-        }
-
-        // Update agents list
-        function updateAgentsList(agents) {
-            const agentsList = document.getElementById('agentsList');
-            document.getElementById('agentCount').innerHTML = `${agents.length} PCs online`;
-
-            if (agents.length === 0) {
-                agentsList.innerHTML = '<div style="text-align: center; color: var(--text-dim);">No PCs connected</div>';
-                return;
-            }
-
-            agentsList.innerHTML = agents.map(agent => `
-                <div class="agent-card ${selectedAgent === agent.id ? 'selected' : ''}" onclick="selectAgent('${agent.id}')">
-                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                        <span class="agent-status"></span>
-                        <strong>${agent.hostname || agent.id}</strong>
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-dim);">
-                        <i class="fas fa-microchip"></i> ${agent.cpu_count || '?'} cores
-                        <i class="fas fa-memory" style="margin-left: 10px;"></i> ${formatBytes(agent.memory_total || 0)}
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Select agent
-        function selectAgent(agentId) {
-            selectedAgent = agentId;
-            document.getElementById('selectedAgentName').innerHTML = `<i class="fas fa-desktop"></i> Controlling: ${agentId}`;
+        
+        function updateConnectionStatus(status) {
+            const indicator = document.getElementById('connectionIndicator');
+            const text = document.getElementById('connectionText');
             
-            document.querySelectorAll('.agent-card').forEach(card => {
-                card.classList.remove('selected');
+            indicator.className = 'status-indicator';
+            
+            switch (status) {
+                case 'connected':
+                    indicator.classList.add('connected');
+                    text.textContent = 'Connected';
+                    break;
+                case 'connecting':
+                    indicator.classList.add('connecting');
+                    text.textContent = 'Connecting...';
+                    break;
+                default:
+                    indicator.classList.add('disconnected');
+                    text.textContent = 'Disconnected';
+            }
+        }
+        
+        function updateAgentList(agents) {
+            const select = document.getElementById('agentSelect');
+            select.innerHTML = '<option value="">Select an agent...</option>';
+            
+            agents.forEach(agent => {
+                const option = document.createElement('option');
+                option.value = agent.agent_id;
+                option.textContent = `${agent.hostname} (${agent.platform})`;
+                select.appendChild(option);
             });
-            event.currentTarget.classList.add('selected');
-
-            // Get windows and processes
-            sendCommand('get_windows', {});
-            sendCommand('get_processes', {});
-            sendCommand('get_screen_size', {});
-            
-            showNotification(`Connected to ${agentId}`, 'success');
         }
-
-        // Send command to agent
-        function sendCommand(type, data = {}) {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                showNotification('WebSocket disconnected', 'error');
+        
+        function addAgentToList(agent) {
+            const select = document.getElementById('agentSelect');
+            const option = document.createElement('option');
+            option.value = agent.agent_id;
+            option.textContent = `${agent.hostname} (${agent.platform})`;
+            select.appendChild(option);
+        }
+        
+        function removeAgentFromList(agentId) {
+            const select = document.getElementById('agentSelect');
+            for (let i = 0; i < select.options.length; i++) {
+                if (select.options[i].value === agentId) {
+                    select.remove(i);
+                    break;
+                }
+            }
+        }
+        
+        function connectToAgent() {
+            const agentId = document.getElementById('agentSelect').value;
+            
+            if (!agentId) {
+                showError('Please select an agent');
                 return;
             }
-
-            if (!selectedAgent) {
-                showNotification('No PC selected', 'error');
-                return;
+            
+            if (currentAgent) {
+                // Disconnect
+                socket.send(JSON.stringify({
+                    type: 'deselect_agent'
+                }));
+            } else {
+                // Connect
+                socket.send(JSON.stringify({
+                    type: 'select_agent',
+                    agent_id: agentId
+                }));
             }
-
-            ws.send(JSON.stringify({
-                type: type,
-                agent_id: selectedAgent,
-                data: data
+        }
+        
+        function updateSystemInfo(info) {
+            systemInfo = info;
+            
+            document.getElementById('hostname').textContent = info.hostname || '-';
+            document.getElementById('platform').textContent = info.platform || '-';
+            document.getElementById('cpu').textContent = info.processor || '-';
+            document.getElementById('cores').textContent = info.cpu_cores || '-';
+            
+            // CPU Usage
+            const cpuUsage = info.cpu_percent || 0;
+            document.getElementById('cpuUsage').textContent = `${cpuUsage}%`;
+            document.getElementById('cpuProgress').style.width = `${cpuUsage}%`;
+            
+            // Memory
+            const memoryTotal = parseFloat(info.memory_total) || 0;
+            const memoryUsed = memoryTotal * (info.memory_percent / 100) || 0;
+            document.getElementById('memory').textContent = 
+                `${memoryUsed.toFixed(1)}/${memoryTotal.toFixed(1)} GB`;
+            document.getElementById('memoryProgress').style.width = `${info.memory_percent || 0}%`;
+            
+            // Disk
+            const diskTotal = parseFloat(info.disk_total) || 0;
+            const diskFree = parseFloat(info.disk_free) || 0;
+            const diskUsed = diskTotal - diskFree;
+            document.getElementById('disk').textContent = 
+                `${diskUsed.toFixed(1)}/${diskTotal.toFixed(1)} GB`;
+            document.getElementById('diskProgress').style.width = `${info.disk_percent || 0}%`;
+            
+            // Network
+            if (info.network_interfaces && info.network_interfaces.length > 0) {
+                const ips = info.network_interfaces.map(net => net.ip).join(', ');
+                document.getElementById('ipAddresses').textContent = ips;
+            }
+            
+            // GPU
+            if (info.gpu && info.gpu.length > 0) {
+                document.getElementById('gpu').textContent = info.gpu[0].name || '-';
+            }
+        }
+        
+        function displayFrame(data) {
+            if (!streaming) return;
+            
+            const imageData = data.image || data.data;
+            if (!imageData) return;
+            
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+                
+                frameCount++;
+                
+                // Update stats from frame
+                if (data.stats) {
+                    document.getElementById('fps').textContent = data.stats.fps.toFixed(1);
+                }
+            };
+            
+            if (typeof imageData === 'string') {
+                img.src = 'data:image/jpeg;base64,' + imageData;
+            } else {
+                const blob = new Blob([imageData], { type: 'image/jpeg' });
+                img.src = URL.createObjectURL(blob);
+            }
+        }
+        
+        function updateFPS() {
+            const now = performance.now();
+            const delta = now - lastFrameTime;
+            
+            if (delta >= 1000) {
+                fps = frameCount;
+                document.getElementById('fps').textContent = fps;
+                frameCount = 0;
+                lastFrameTime = now;
+            }
+            
+            // Update bandwidth
+            const now2 = performance.now();
+            if (now2 - lastBandwidthTime >= 1000) {
+                document.getElementById('bandwidth').textContent = (bandwidth / 1024).toFixed(1);
+                bandwidth = 0;
+                lastBandwidthTime = now2;
+            }
+            
+            // Update latency
+            document.getElementById('latency').textContent = latency;
+        }
+        
+        function handleMouseMove(e) {
+            if (!currentAgent || !streaming) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+            
+            socket.send(JSON.stringify({
+                type: 'mouse_event',
+                agent_id: currentAgent,
+                action: 'move',
+                x: x,
+                y: y
             }));
         }
-
-        // Screen sharing
-        function startScreenShare() {
-            if (!selectedAgent) {
-                showNotification('No PC selected', 'error');
-                return;
-            }
+        
+        function handleMouseDown(e) {
+            if (!currentAgent || !streaming) return;
             
-            screenActive = true;
-            document.getElementById('startScreenBtn').style.display = 'none';
-            document.getElementById('stopScreenBtn').style.display = 'block';
-            document.getElementById('screenPlaceholder').style.display = 'none';
-            document.getElementById('screenImage').style.display = 'block';
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
             
-            sendCommand('start_screen', { fps: 60, quality: 85 });
-            showNotification('Screen sharing started', 'success');
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+            
+            let button = 'left';
+            if (e.button === 2) button = 'right';
+            if (e.button === 1) button = 'middle';
+            
+            socket.send(JSON.stringify({
+                type: 'mouse_event',
+                agent_id: currentAgent,
+                action: 'down',
+                button: button,
+                x: x,
+                y: y
+            }));
         }
-
-        function stopScreenShare() {
-            screenActive = false;
-            document.getElementById('startScreenBtn').style.display = 'block';
-            document.getElementById('stopScreenBtn').style.display = 'none';
-            document.getElementById('screenImage').style.display = 'none';
-            document.getElementById('screenPlaceholder').style.display = 'block';
+        
+        function handleMouseUp(e) {
+            if (!currentAgent || !streaming) return;
             
-            sendCommand('stop_screen', {});
-            showNotification('Screen sharing stopped', 'success');
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            const x = Math.floor((e.clientX - rect.left) * scaleX);
+            const y = Math.floor((e.clientY - rect.top) * scaleY);
+            
+            let button = 'left';
+            if (e.button === 2) button = 'right';
+            if (e.button === 1) button = 'middle';
+            
+            socket.send(JSON.stringify({
+                type: 'mouse_event',
+                agent_id: currentAgent,
+                action: 'up',
+                button: button,
+                x: x,
+                y: y
+            }));
         }
-
-        function updateScreen(imageData) {
-            const img = document.getElementById('screenImage');
-            img.src = 'data:image/jpeg;base64,' + imageData;
+        
+        function handleMouseWheel(e) {
+            if (!currentAgent || !streaming) return;
+            
+            socket.send(JSON.stringify({
+                type: 'mouse_event',
+                agent_id: currentAgent,
+                action: 'scroll',
+                delta: e.deltaY > 0 ? -1 : 1
+            }));
         }
-
-        // Mouse control
-        document.getElementById('remoteScreen').addEventListener('mousemove', (e) => {
-            if (!screenActive || !selectedAgent) return;
+        
+        function handleKeyDown(e) {
+            if (!currentAgent || !streaming) return;
+            if (e.target.tagName === 'INPUT') return;
             
-            const rect = e.target.getBoundingClientRect();
-            const img = document.getElementById('screenImage');
+            e.preventDefault();
             
-            if (img.src) {
-                const scaleX = screenWidth / img.width;
-                const scaleY = screenHeight / img.height;
-                
-                const x = Math.floor((e.clientX - rect.left) * scaleX);
-                const y = Math.floor((e.clientY - rect.top) * scaleY);
-                
-                document.getElementById('cursorPosition').style.display = 'block';
-                document.getElementById('cursorPosition').innerHTML = `X: ${x}, Y: ${y}`;
-                
-                if (isDragging) {
-                    sendCommand('mouse_drag', { x, y, button: currentMouseButton });
+            socket.send(JSON.stringify({
+                type: 'keyboard_event',
+                agent_id: currentAgent,
+                action: 'press',
+                key: e.key
+            }));
+        }
+        
+        function handleKeyUp(e) {
+            if (!currentAgent || !streaming) return;
+            if (e.target.tagName === 'INPUT') return;
+            
+            e.preventDefault();
+            
+            socket.send(JSON.stringify({
+                type: 'keyboard_event',
+                agent_id: currentAgent,
+                action: 'release',
+                key: e.key
+            }));
+        }
+        
+        function sendCommand() {
+            const input = document.getElementById('terminalInput');
+            const command = input.value.trim();
+            
+            if (!command) return;
+            
+            appendToTerminal(`$ ${command}`);
+            
+            socket.send(JSON.stringify({
+                type: 'execute_command',
+                agent_id: currentAgent,
+                command: command
+            }));
+            
+            terminalHistory.push(command);
+            historyIndex = terminalHistory.length;
+            input.value = '';
+        }
+        
+        function handleTerminalHistory(e) {
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    document.getElementById('terminalInput').value = terminalHistory[historyIndex];
+                }
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex < terminalHistory.length - 1) {
+                    historyIndex++;
+                    document.getElementById('terminalInput').value = terminalHistory[historyIndex];
                 } else {
-                    sendCommand('mouse_move', { x, y });
+                    historyIndex = terminalHistory.length;
+                    document.getElementById('terminalInput').value = '';
                 }
             }
-        });
-
-        document.getElementById('remoteScreen').addEventListener('mousedown', (e) => {
-            if (!screenActive || !selectedAgent) return;
+        }
+        
+        function appendToTerminal(text) {
+            const output = document.getElementById('terminalOutput');
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            line.textContent = text;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function navigateTo(path) {
+            currentFilePath = path;
+            document.getElementById('currentPath').value = path;
             
-            isDragging = true;
-            sendCommand('mouse_down', { button: currentMouseButton });
-        });
-
-        document.getElementById('remoteScreen').addEventListener('mouseup', (e) => {
-            if (!screenActive || !selectedAgent) return;
+            socket.send(JSON.stringify({
+                type: 'list_files',
+                agent_id: currentAgent,
+                path: path
+            }));
+        }
+        
+        function updateFileList(path, files) {
+            const fileList = document.getElementById('fileList');
+            fileList.innerHTML = '';
             
-            isDragging = false;
-            sendCommand('mouse_up', { button: currentMouseButton });
-        });
-
-        document.getElementById('remoteScreen').addEventListener('click', (e) => {
-            if (!screenActive || !selectedAgent) return;
+            if (path !== '/' && path !== 'C:\\') {
+                const parentItem = createFileItem({
+                    name: '..',
+                    type: 'dir',
+                    path: getParentPath(path)
+                });
+                fileList.appendChild(parentItem);
+            }
             
-            if (e.detail === 2) {
-                sendCommand('mouse_double_click', { button: currentMouseButton });
+            files.forEach(file => {
+                const item = createFileItem(file);
+                fileList.appendChild(item);
+            });
+        }
+        
+        function createFileItem(file) {
+            const div = document.createElement('div');
+            div.className = `file-item ${file.type}`;
+            
+            const icon = document.createElement('span');
+            icon.className = 'file-icon';
+            icon.textContent = file.type === 'dir' ? '📁' : '📄';
+            
+            const name = document.createElement('span');
+            name.className = 'file-name';
+            name.textContent = file.name;
+            
+            const size = document.createElement('span');
+            size.className = 'file-size';
+            size.textContent = file.type === 'dir' ? '' : formatFileSize(file.size);
+            
+            const actions = document.createElement('span');
+            actions.className = 'file-actions';
+            
+            if (file.type === 'dir') {
+                actions.innerHTML = '<button class="file-action" onclick="event.stopPropagation(); navigateTo(\'' + file.path + '\')">📂 Open</button>';
             } else {
-                sendCommand('mouse_click', { button: currentMouseButton, clicks: 1 });
+                actions.innerHTML = `
+                    <button class="file-action" onclick="event.stopPropagation(); downloadFile('${file.path}')">⬇️</button>
+                    <button class="file-action" onclick="event.stopPropagation(); showUploadModal('${file.path}')">⬆️</button>
+                `;
             }
-        });
-
-        document.getElementById('remoteScreen').addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            if (!screenActive || !selectedAgent) return;
             
-            sendCommand('mouse_right_click', {});
-        });
-
-        document.getElementById('remoteScreen').addEventListener('wheel', (e) => {
-            if (!screenActive || !selectedAgent) return;
+            div.appendChild(icon);
+            div.appendChild(name);
+            div.appendChild(size);
+            div.appendChild(actions);
             
-            sendCommand('mouse_scroll', { clicks: e.deltaY > 0 ? -1 : 1 });
-        });
-
-        // Keyboard control
-        document.addEventListener('keydown', (e) => {
-            if (!screenActive || !selectedAgent) return;
+            div.onclick = () => {
+                if (file.type === 'dir') {
+                    navigateTo(file.path);
+                }
+            };
             
-            e.preventDefault();
-            sendCommand('key_down', { key: e.key });
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (!screenActive || !selectedAgent) return;
-            
-            e.preventDefault();
-            sendCommand('key_up', { key: e.key });
-        });
-
-        // Send key command
-        function sendKey(key) {
-            if (!selectedAgent) return;
-            
-            if (key.includes('+')) {
-                const keys = key.split('+');
-                sendCommand('key_hotkey', { keys });
-            } else {
-                sendCommand('key_press', { key });
+            return div;
+        }
+        
+        function getParentPath(path) {
+            if (path.endsWith('\\') || path.endsWith('/')) {
+                path = path.slice(0, -1);
             }
+            const parts = path.split(/[\\/]/);
+            parts.pop();
+            return parts.join('\\') || (path.includes('C:') ? 'C:\\' : '/');
         }
-
-        // Set mouse button
-        function setMouseButton(button) {
-            currentMouseButton = button;
-            
-            document.getElementById('mouseLeftBtn').style.background = button === 'left' ? 'var(--primary)' : '';
-            document.getElementById('mouseRightBtn').style.background = button === 'right' ? 'var(--primary)' : '';
-            document.getElementById('mouseMiddleBtn').style.background = button === 'middle' ? 'var(--primary)' : '';
-        }
-
-        // Update windows list
-        function updateWindowsList(windows) {
-            const list = document.getElementById('windowsList');
-            
-            if (!windows || windows.length === 0) {
-                list.innerHTML = '<div style="color: var(--text-dim);">No windows found</div>';
-                return;
-            }
-
-            list.innerHTML = windows.map(win => `
-                <div class="window-item">
-                    <div class="window-title">${win.title || 'Untitled'}</div>
-                    <div class="window-actions">
-                        <button class="window-btn" onclick="focusWindow('${win.id}')">
-                            <i class="fas fa-eye"></i> Focus
-                        </button>
-                        <button class="window-btn" onclick="minimizeWindow('${win.id}')">
-                            <i class="fas fa-window-minimize"></i>
-                        </button>
-                        <button class="window-btn" onclick="maximizeWindow('${win.id}')">
-                            <i class="fas fa-window-maximize"></i>
-                        </button>
-                        <button class="window-btn" onclick="closeWindow('${win.id}')">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Update processes list
-        function updateProcessesList(processes) {
-            const list = document.getElementById('processesList');
-            
-            if (!processes || processes.length === 0) {
-                list.innerHTML = '<div style="color: var(--text-dim);">No processes found</div>';
-                return;
-            }
-
-            list.innerHTML = processes.map(proc => `
-                <div class="process-item">
-                    <div class="process-info">
-                        <div class="process-name">${proc.name || 'Unknown'}</div>
-                        <div class="process-pid">PID: ${proc.pid} | CPU: ${proc.cpu_percent?.toFixed(1)}% | MEM: ${proc.memory_percent?.toFixed(1)}%</div>
-                    </div>
-                    <button class="kill-process" onclick="killProcess(${proc.pid})">
-                        <i class="fas fa-skull"></i>
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        // Window controls
-        function focusWindow(id) {
-            sendCommand('focus_window', { window_id: id });
-        }
-
-        function closeWindow(id) {
-            if (confirm('Close this window?')) {
-                sendCommand('close_window', { window_id: id });
-            }
-        }
-
-        function minimizeWindow(id) {
-            sendCommand('minimize_window', { window_id: id });
-        }
-
-        function maximizeWindow(id) {
-            sendCommand('maximize_window', { window_id: id });
-        }
-
-        // Process control
-        function killProcess(pid) {
-            if (confirm(`Kill process ${pid}?`)) {
-                sendCommand('kill_process', { pid });
-            }
-        }
-
-        // Utility functions
-        function formatBytes(bytes) {
+        
+        function formatFileSize(bytes) {
             if (bytes === 0) return '0 B';
             const k = 1024;
             const sizes = ['B', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
-
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`;
-            notification.style.borderLeftColor = type === 'success' ? 'var(--primary)' : 'var(--accent)';
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 3000);
+        
+        function downloadFile(path) {
+            socket.send(JSON.stringify({
+                type: 'file_transfer',
+                agent_id: currentAgent,
+                action: 'upload',
+                filepath: path
+            }));
         }
-
-        function showLoading(show) {
-            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        
+        function showUploadModal() {
+            document.getElementById('uploadModal').classList.add('active');
         }
-
-        function switchPanelTab(tab) {
-            document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            
-            document.getElementById('controlsPanel').style.display = tab === 'controls' ? 'block' : 'none';
-            document.getElementById('windowsPanel').style.display = tab === 'windows' ? 'block' : 'none';
-            document.getElementById('processesPanel').style.display = tab === 'processes' ? 'block' : 'none';
-            
-            if (tab === 'windows' && selectedAgent) {
-                sendCommand('get_windows', {});
-            } else if (tab === 'processes' && selectedAgent) {
-                sendCommand('get_processes', {});
-            }
+        
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('active');
         }
-
+        
+        function uploadFiles() {
+            const files = document.getElementById('fileInput').files;
+            const path = currentFilePath;
+            
+            closeUploadModal();
+            document.getElementById('uploadProgress').classList.add('active');
+            
+            Array.from(files).forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    socket.send(JSON.stringify({
+                        type: 'file_transfer',
+                        agent_id: currentAgent,
+                        action: 'download_start',
+                        file_id: `file_${Date.now()}_${index}`,
+                        name: file.name,
+                        size: file.size,
+                        mime: file.type,
+                        resume_pos: 0
+                    }));
+                    
+                    // Send chunks
+                    const chunkSize = 64 * 1024;
+                    const chunks = Math.ceil(file.size / chunkSize);
+                    
+                    for (let i = 0; i < chunks; i++) {
+                        const start = i * chunkSize;
+                        const end = Math.min(start + chunkSize, file.size);
+                        const chunk = e.target.result.slice(start, end);
+                        
+                        socket.send(JSON.stringify({
+                            type: 'file_transfer',
+                            agent_id: currentAgent,
+                            action: 'download_chunk',
+                            file_id: `file_${Date.now()}_${index}`,
+                            data: btoa(String.fromCharCode(...new Uint8Array(chunk))),
+                            position: start
+                        }));
+                        
+                        const percent = ((i + 1) / chunks * 100).toFixed(1);
+                        document.getElementById('uploadPercent').textContent = `${percent}%`;
+                        document.getElementById('uploadProgressBar').style.width = `${percent}%`;
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        function handleFileChunk(data) {
+            // Update progress
+            const percent = (data.position / data.total * 100).toFixed(1);
+            document.getElementById('uploadPercent').textContent = `${percent}%`;
+            document.getElementById('uploadProgressBar').style.width = `${percent}%`;
+        }
+        
+        function copyToRemote() {
+            const text = document.getElementById('clipboardText').value;
+            
+            socket.send(JSON.stringify({
+                type: 'clipboard_sync',
+                agent_id: currentAgent,
+                content: {
+                    text: text
+                }
+            }));
+        }
+        
+        function copyFromRemote() {
+            socket.send(JSON.stringify({
+                type: 'clipboard_sync',
+                agent_id: currentAgent
+            }));
+        }
+        
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(tc => {
+                tc.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+        }
+        
         function toggleFullscreen() {
+            const container = document.getElementById('screenContainer');
             if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
+                container.requestFullscreen();
             } else {
                 document.exitFullscreen();
             }
         }
-
-        function refreshAgents() {
-            loadAgents();
-            showNotification('Refreshing agents...', 'success');
-        }
-
-        function showDashboard() {
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-        }
-
-        function logout() {
-            localStorage.removeItem('token');
-            token = null;
-            if (ws) ws.close();
+        
+        function toggleQuality() {
+            const btn = document.getElementById('qualityBtn');
+            let quality = 85;
             
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('dashboard').style.display = 'none';
-            showNotification('Logged out', 'success');
+            if (btn.textContent === 'HD') {
+                btn.textContent = 'SD';
+                quality = 50;
+            } else if (btn.textContent === 'SD') {
+                btn.textContent = 'HQ';
+                quality = 95;
+            } else {
+                btn.textContent = 'HD';
+                quality = 85;
+            }
+            
+            if (streaming && currentAgent) {
+                socket.send(JSON.stringify({
+                    type: 'start_stream',
+                    agent_id: currentAgent,
+                    config: {
+                        quality: quality,
+                        fps: 30,
+                        monitor: 1
+                    }
+                }));
+            }
         }
-
-        // Auto refresh
+        
+        function toggleStream() {
+            streaming = !streaming;
+            const btn = document.getElementById('streamToggle');
+            
+            if (streaming) {
+                btn.textContent = '⏸️ Pause';
+                socket.send(JSON.stringify({
+                    type: 'start_stream',
+                    agent_id: currentAgent,
+                    config: {
+                        quality: 85,
+                        fps: 30,
+                        monitor: 1
+                    }
+                }));
+            } else {
+                btn.textContent = '▶️ Resume';
+                socket.send(JSON.stringify({
+                    type: 'stop_stream',
+                    agent_id: currentAgent
+                }));
+            }
+        }
+        
+        function updateStats(stats) {
+            // Update stats display
+        }
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('login-error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        function showNotification(message) {
+            // Show notification
+        }
+        
+        // Periodic ping to measure latency
         setInterval(() => {
-            if (token && selectedAgent) {
-                sendCommand('get_windows', {});
-                sendCommand('get_processes', {});
-                sendCommand('get_cursor_position', {});
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'ping',
+                    timestamp: Date.now()
+                }));
             }
         }, 5000);
+        
+        // Refresh system info
+        setInterval(() => {
+            if (currentAgent && socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    type: 'get_system_info',
+                    agent_id: currentAgent
+                }));
+            }
+        }, 5000);
+        
+        // Update refresh time
+        setInterval(() => {
+            document.getElementById('refreshTime').textContent = 
+                new Date().toLocaleTimeString();
+        }, 1000);
     </script>
 </body>
 </html>
