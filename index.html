@@ -1107,8 +1107,9 @@
     </div>
 
     <script>
-        // Configuration
-        const API_URL = window.location.origin;
+        // Configuration - Updated to your Render backend
+        const API_URL = 'https://remote-pc-backend.onrender.com';
+        
         let token = localStorage.getItem('token');
         let ws = null;
         let clientId = 'web-' + Math.random().toString(36).substr(2, 9);
@@ -1117,6 +1118,7 @@
         let screenActive = false;
         let notificationTimeout = null;
         let reconnectAttempts = 0;
+        let pingInterval = null;
 
         // Create floating background icons
         function createFloatingIcons() {
@@ -1136,11 +1138,24 @@
         // Check if we have a token and try to auto-login
         if (token) {
             console.log('Found existing token, attempting auto-login...');
-            showDashboard();
-            connectWebSocket();
-            loadAgents();
+            verifyToken(token);
         } else {
             document.getElementById('loginScreen').style.display = 'flex';
+        }
+
+        // Verify token with backend
+        async function verifyToken(token) {
+            try {
+                // You can add a token verification endpoint here
+                // For now, just try to load agents
+                showDashboard();
+                connectWebSocket();
+                await loadAgents();
+            } catch (error) {
+                console.error('Token verification failed:', error);
+                localStorage.removeItem('token');
+                document.getElementById('loginScreen').style.display = 'flex';
+            }
         }
 
         // Login handler
@@ -1163,13 +1178,9 @@
                     body: JSON.stringify({ username, password })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Login failed: ${response.status}`);
-                }
-
                 const data = await response.json();
                 
-                if (data.success) {
+                if (data.success && data.access_token) {
                     token = data.access_token;
                     localStorage.setItem('token', token);
                     
@@ -1179,11 +1190,12 @@
                     showNotification('Login successful!', 'success');
                 } else {
                     showNotification(data.message || 'Login failed', 'error');
+                    document.getElementById('loginError').textContent = data.message || 'Invalid username or password';
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                document.getElementById('loginError').textContent = 'Invalid username or password';
-                showNotification('Login failed', 'error');
+                document.getElementById('loginError').textContent = 'Connection error. Please try again.';
+                showNotification('Connection error', 'error');
             } finally {
                 loginBtn.innerHTML = originalText;
                 loginBtn.disabled = false;
@@ -1192,15 +1204,28 @@
 
         // WebSocket connection
         function connectWebSocket() {
-            const wsUrl = API_URL.replace('http', 'ws') + `/ws/client/${clientId}`;
+            const wsUrl = API_URL.replace('https', 'wss') + `/ws/client/${clientId}`;
             
             console.log('Connecting WebSocket to:', wsUrl);
+            
+            if (ws) {
+                ws.close();
+            }
+            
             ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
                 console.log('✅ WebSocket connected');
                 reconnectAttempts = 0;
                 showNotification('Connected to server', 'success');
+                
+                // Start ping interval
+                if (pingInterval) clearInterval(pingInterval);
+                pingInterval = setInterval(() => {
+                    if (ws && ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({ type: 'ping' }));
+                    }
+                }, 30000);
             };
 
             ws.onmessage = (event) => {
@@ -1215,6 +1240,11 @@
 
             ws.onclose = () => {
                 console.log('WebSocket disconnected');
+                if (pingInterval) {
+                    clearInterval(pingInterval);
+                    pingInterval = null;
+                }
+                
                 if (token && document.getElementById('dashboard').style.display !== 'none') {
                     // Try to reconnect with exponential backoff
                     const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
@@ -1268,6 +1298,13 @@
                     break;
                 case 'system_info':
                     updateSystemInfo(response.data || response);
+                    break;
+                case 'disk_usage':
+                case 'network_stats':
+                case 'cpu_usage':
+                case 'memory_usage':
+                    // Handle additional info types
+                    console.log('Received stats:', response);
                     break;
             }
         }
@@ -1416,7 +1453,7 @@
             document.getElementById('screenPlaceholder').style.display = 'none';
             document.getElementById('screenImage').style.display = 'block';
             
-            sendCommand('start_screen', {});
+            sendCommand('start_screen', { fps: 30, quality: 70 });
             showNotification('Screen sharing started', 'success');
         }
 
@@ -1615,6 +1652,10 @@
                 ws.close();
                 ws = null;
             }
+            if (pingInterval) {
+                clearInterval(pingInterval);
+                pingInterval = null;
+            }
             document.getElementById('loginScreen').style.display = 'flex';
             document.getElementById('dashboard').style.display = 'none';
             selectedAgent = null;
@@ -1627,6 +1668,18 @@
                 loadAgents();
             }
         }, 30000);
+
+        // Handle page visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Page is hidden, maybe reduce polling
+            } else {
+                // Page is visible again, refresh agents
+                if (token && document.getElementById('dashboard').style.display !== 'none') {
+                    loadAgents();
+                }
+            }
+        });
     </script>
 </body>
 </html>
